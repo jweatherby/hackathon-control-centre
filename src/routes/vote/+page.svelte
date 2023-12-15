@@ -93,6 +93,8 @@
         setTimeout(() => {
           validations= resetValidations()
         }, 5000)
+      } else {
+        votesCast = true
       }
     });
   };
