@@ -4,9 +4,11 @@
   import { dictify } from '$lib/utils/dictify';
   import DistributedVoteForm from './DistributedVoteForm.svelte';
   import type {
+    CastVote,
     CastVotesPayload,
     IEntry,
     IPrize,
+    ValidationState,
     VotingTypeEnum,
   } from '$lib/types';
   import SingleVoteForm from './SingleVoteForm.svelte';
@@ -20,6 +22,13 @@
   let entries = [] as IEntry[]
   let notOnTeamChecked = false
   let votingFormState = 'selecting-teams'
+  const resetValidations = () => prizes.reduce(
+    (all, p) => ({
+      ...all,
+      [p.id]: {dirty: false, ok: false, message: 'Pending'},
+    }),
+    {}
+  );
   const resetForms = () => prizes.reduce(
     (all, p) => ({
       ...all,
@@ -41,12 +50,15 @@
     entries = Object.values($entities.entries)
     if((!!ownedEntryIds.length || notOnTeamChecked) && votingFormState === 'selecting-teams'){
       votingFormState = 'can-vote'
+    } else if(votingFormState === 'can-vote' && (!ownedEntryIds.length && !notOnTeamChecked)){
+      votingFormState = 'selecting-teams'
     }
   }
   const filterPrizes = (votingType: VotingTypeEnum) =>
     prizes.filter((p) => p.votingType === votingType);
 
-  let payloads: Record<string, CastVotesPayload> = resetForms()
+  let payloads: Record<string, CastVote[]> = resetForms()
+  let validations: Record<string, ValidationState> = resetValidations()
   
   let votesCast = !!$page.data.userVotes.length;
   const castVotes = () => {
@@ -58,12 +70,30 @@
     );
     const apiCalls = [
       trpc().entries.setOwnedEntries.mutate({entryIds: ownedEntryIds as string[]}),
-      ...apiPayload.map((votesPayload) =>
-      trpc().entries.addVotes.mutate(votesPayload)
+      ...apiPayload.map((votesPayload) => (
+        trpc().entries.addVotes.mutate(votesPayload)
+      )
     )];
-    Promise.all(apiCalls).then((resp) => {
-      console.log('Votes have been cast!');
-      votesCast = true;
+    Promise.all(apiCalls).then(responses => {
+      let hasError = false
+      responses.forEach((resp) => {
+        if(resp){
+          const {prizeId, errors} = resp
+          if(!!errors.length){
+            hasError = true
+            validations[prizeId] = {
+              dirty: true, 
+              ok: false, 
+              message: errors[0].message as string
+            }
+          }
+        }
+      })
+      if(hasError){
+        setTimeout(() => {
+          validations= resetValidations()
+        }, 5000)
+      }
     });
   };
   const toggleNotOnTeam = (event: Event) => {
@@ -77,6 +107,7 @@
   const gotoVote = () => {
     votingFormState = 'voting'
   }
+
 </script>
 
 {#if votesCast}
@@ -103,6 +134,7 @@
   {#if ['selecting-teams', 'can-vote'].includes(votingFormState)}
   <div class='container select-teams'>
     <div class='card'>
+      <h3>Before you get to voting</h3>
       <fieldset>
         <label>
           <p><strong>Which team(s) were you part of?</strong></p>
@@ -130,7 +162,7 @@
   {:else}
     <div class='container goto-team-select'>
       <p>
-        Listed below are the people's prizes.
+        Listed below are the available prizes.
         <br/>Go through each section, assign all your votes.
         <br /><strong>You will not be able to recast your votes.</strong>
       </p>
@@ -139,11 +171,11 @@
       </aside>
     </div>
     {#each filterPrizes('SINGLE_VOTE') as prize}
-      <SingleVoteForm bind:payload={payloads[prize.id]} {prize} {ownedEntryIds} />
+      <SingleVoteForm bind:payload={payloads[prize.id]} bind:validation={validations[prize.id]} {prize} {ownedEntryIds} />
     {/each}
 
     {#each filterPrizes('DISTRIBUTE_VOTES') as prize}
-      <DistributedVoteForm bind:payload={payloads[prize.id]} {prize} {ownedEntryIds} />
+      <DistributedVoteForm bind:payload={payloads[prize.id]}  bind:validation={validations[prize.id]} {prize} {ownedEntryIds} />
     {/each}
     <div class="container">
       <footer>

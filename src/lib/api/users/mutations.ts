@@ -2,7 +2,6 @@ import { z } from 'zod';
 import { privateRoute, publicRoute } from '$lib/trpc/init';
 import { prisma } from '$lib/dbClient';
 import { serializeUser } from './serializers';
-import type { IUser } from '$lib/types';
 import type { User } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 
@@ -13,15 +12,17 @@ export default {
   createUser: publicRoute
     .input(
       z.object({
+        // email: z.string(),
         email: z.coerce
           .string()
           .email({ message: 'Invalid email address provided' })
           .regex(/@(points|plusgrade).com/, {
-            message: 'Must be your work email',
+            message: 'Please use your work email',
           }),
       }),
     )
-    .mutation(async ({ input: { email } }) => {
+    .mutation(async ({ input }) => {
+      const email = input.email as string
       let user: User | null;
       user = await prisma.user.findUnique({ where: { email } });
       if (user) {

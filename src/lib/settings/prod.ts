@@ -1,3 +1,3 @@
 export default {
-  rootDomain: 'hackathon-command-centre.fly.dev',
+  rootDomain: 'points-hackathon-command-centre.fly.dev',
 };

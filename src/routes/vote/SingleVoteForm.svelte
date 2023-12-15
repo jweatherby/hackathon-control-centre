@@ -1,25 +1,29 @@
 <script lang="ts">
   import { navigating, page } from '$app/stores';
   import { entities } from '$lib/stores';
-  import type { CastVote, CastVotesPayload, IEntry, IPrize } from '$lib/types';
+  import type { CastVote, IEntry, IPrize, ValidationState } from '$lib/types';
   export let payload: CastVote[];
   export let prize: IPrize;
   let entries: IEntry[] = [];
   export let ownedEntryIds = [] as string[]
+  export let validation =  {} as ValidationState
 
   $: {
     entries = $navigating
       ? $page.data.entries
       : Object.values($entities.entries);
   }
-  let entryIdRef: HTMLSelectElement;
+  let entryIdVal: string;
   $: {
-    payload = entryIdRef ? [{ entryId: entryIdRef, numVotes: 1 }] : [];
+    payload = entryIdVal ? [{ entryId: entryIdVal, numVotes: 1 }] as CastVote[] : [];
+
   }
+  console.log('validation', validation)
 </script>
 
 <div class="container vote-form">
-  <label for="entryId" class="card prize">
+  <div class='card'>
+  <label for="entryId" class="prize">
     <figure>
       <img src={prize.imageUrl} alt="The Big Prize" />
     </figure>
@@ -33,7 +37,7 @@
       <p>{prize.description}</p>
     </div>
     <div>
-      <select bind:value={entryIdRef} name="entryId" id="entryId">
+      <select bind:value={entryIdVal} name="entryId" id="entryId">
         <option value=''>-</option>
         {#each entries as entry}
           <option value={entry.id} disabled={ownedEntryIds.includes(entry.id)}
@@ -43,6 +47,10 @@
       </select>
     </div>
   </label>
+  {#if validation && !validation.ok && validation.dirty}
+   <aside>{validation.message}</aside>
+  {/if}
+</div>
 </div>
 
 <style lang="scss">
@@ -88,4 +96,7 @@
       margin-bottom: calc(0.3 * var(--typography-spacing-vertical));
     }
   }
+    aside {
+      color: tomato;
+    }
 </style>

@@ -40,6 +40,8 @@ export type CastVotesPayload = {
   votes: CastVote[];
 };
 
+export type ValidationState = {dirty: boolean, ok: boolean, message: string}
+
 export type AppControl = AppControlVotingEnabled | AppControlQuestion | AppControlEmbed
 export type AppControlVotingEnabled = {
   id: string,

@@ -6,7 +6,7 @@
     import { TRPCClientError } from '@trpc/client';
   import { onMount } from 'svelte';
 
-  const formatErrors = ({message: errors}) => {
+  const formatErrors = ({message: errors}: {message: string}) => {
     return JSON.parse(errors)
   }
   let error: string

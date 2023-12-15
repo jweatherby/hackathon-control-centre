@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { privateRoute, adminRoute } from '$lib/trpc/init';
 import { prisma } from '$lib/dbClient';
 import { serializeEntry, serializePrize } from './serializers';
+import { validatePrize } from './utils/validators';
+import type { CastVote } from '$lib/types';
 
 export default {
   /**
@@ -54,6 +56,13 @@ export default {
       }),
     )
     .mutation(async ({ input: { votes, prizeId }, ctx: { user } }) => {
+      const prize = await prisma.prize.findUniqueOrThrow({
+        where: { id: prizeId },
+      });
+      const { ok, error } = validatePrize(prize, votes);
+      if(!ok){
+        return { prizeId, errors: [{ message: error, code: 'BAD_REQUEST' }] };
+      }
       await prisma.vote.deleteMany({ where: { userId: user.id } });
       await prisma.vote.createMany({
         data: votes.map(({ entryId, numVotes }) => ({

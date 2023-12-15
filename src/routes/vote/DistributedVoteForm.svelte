@@ -1,12 +1,13 @@
 <script lang="ts">
   import { navigating, page } from '$app/stores';
   import { entities } from '$lib/stores';
-  import type { CastVote, IEntry, IPrize } from '$lib/types';
+  import type { CastVote, IEntry, IPrize, ValidationState } from '$lib/types';
 
   export let payload: CastVote[];
   export let prize: IPrize;
   export let ownedEntryIds = [] as string[] 
   let entries: IEntry[] = [];
+  export let validation = {} as ValidationState
 
   $: {
     entries = $navigating
@@ -49,35 +50,40 @@
 <div class="vote-form">
   <div class="container">
     <div class="card">
-      <div class="prize card">
-        <figure>
-          <img src={prize.imageUrl} />
-        </figure>
-        <div class="prize-info" style={`border-color: ${prize.color}`}>
-          <h2>
-            <span
-              data-tooltip="You can distribute your votes across the hacks"
-              style={`border-bottom: 5px solid ${prize.color}`}
-              >{prize.name}</span
-            >
-          </h2>
-          <p>{prize.description}</p>
-        </div>
-        <div class="votes-assignable">
-          <div class="votes-available">
-            <span>Votes left:</span>
-            {#if votesAvailable}
-              <ul class="vote-icons">
-                {#each [...Array(votesAvailable).keys()] as idx}
-                  <li />
-                {/each}
-              </ul>
-            {:else}
-              <div class="no-votes">All your votes have been cast</div>
-            {/if}
+      <div class='card sub-card'>
+        <div class="prize">
+          <figure>
+            <img src={prize.imageUrl} />
+          </figure>
+          <div class="prize-info" style={`border-color: ${prize.color}`}>
+            <h2>
+              <span
+                data-tooltip="You can distribute your votes across the hacks"
+                style={`border-bottom: 5px solid ${prize.color}`}
+                >{prize.name}</span
+              >
+            </h2>
+            <p>{prize.description}</p>
           </div>
-          <div class="votes-info">You have {votesTotal} votes total</div>
+          <div class="votes-assignable">
+            <div class="votes-available">
+              <span>Votes left:</span>
+              {#if votesAvailable}
+                <ul class="vote-icons">
+                  {#each [...Array(votesAvailable).keys()] as idx}
+                    <li />
+                  {/each}
+                </ul>
+              {:else}
+                <div class="no-votes">All your votes have been cast</div>
+              {/if}
+            </div>
+            <div class="votes-info">You have {votesTotal} votes total</div>
+          </div>
         </div>
+        {#if validation && !validation.ok && validation.dirty}
+         <aside>{validation.message}</aside>
+        {/if}
       </div>
       <hr />
       <ul class="entries-list">
@@ -121,6 +127,11 @@
 </div>
 
 <style lang="scss">
+  .sub-card {
+
+    border-radius: 1rem;
+    padding: 16px;
+  }
   .prize {
     display: grid;
     grid-template-columns: 100px 1fr;
@@ -129,8 +140,6 @@
       margin-bottom: calc(0.3 * var(--typography-spacing-vertical));
     }
     // border: 2px solid transparent;
-    border-radius: 1rem;
-    padding: 16px;
     // background-color: var(--contrast);
     // color: var(--contrast-inverse);
     // p, h4, h5, select, option {
@@ -218,4 +227,7 @@
       }
     }
   }
+    aside {
+      color: tomato;
+    }
 </style>
