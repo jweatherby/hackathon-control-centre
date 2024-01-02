@@ -4,6 +4,7 @@ import { prisma } from '$lib/dbClient';
 import { serializeEntry, serializePrize } from './serializers';
 import { validatePrize } from './utils/validators';
 import type { CastVote } from '$lib/types';
+import { AppControlType } from '@prisma/client';
 
 export default {
   /**
@@ -56,6 +57,16 @@ export default {
       }),
     )
     .mutation(async ({ input: { votes, prizeId }, ctx: { user } }) => {
+      const votingEnabled = await prisma.appControl.findFirst({
+        where: {
+          controlType: AppControlType.VOTING_ENABLED,
+        },
+      });
+      if(!votingEnabled?.isActive){
+        return {
+          errors: [{ message: 'Voting is disabled', code: 'BAD_REQUEST' }],
+        };
+      }
       const prize = await prisma.prize.findUniqueOrThrow({
         where: { id: prizeId },
       });

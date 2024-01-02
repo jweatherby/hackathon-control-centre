@@ -16,7 +16,6 @@
   let entryIdVal: string;
   $: {
     payload = entryIdVal ? [{ entryId: entryIdVal, numVotes: 1 }] as CastVote[] : [];
-
   }
   console.log('validation', validation)
 </script>

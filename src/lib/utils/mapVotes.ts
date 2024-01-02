@@ -1,7 +1,6 @@
-
+import { get } from 'svelte/store';
 import { entities } from '$lib/stores';
 import type { IPrize, IVote } from '$lib/types';
-import { get } from 'svelte/store';
 
 type PrizeVotesOpts = {
   onlyReleased: boolean

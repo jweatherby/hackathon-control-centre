@@ -4,7 +4,9 @@ import { serializeAppControl } from './serializers';
 
 export default {
   listAllControls: publicRoute.query(async () => {
-    const ctrls = await prisma.adminControl.findMany();
-    return ctrls.map(c => serializeAppControl(c))
+    const ctrls = await prisma.appControl.findMany();
+    const mappedCtrls = ctrls.map(c => serializeAppControl(c))
+    console.log('mappedCtrls', mappedCtrls)
+    return mappedCtrls
   })
 };

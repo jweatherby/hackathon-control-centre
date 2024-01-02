@@ -15,7 +15,7 @@ const validators: Record<string, PrizeValidator> = {
   [VotingType.DISTRIBUTE_VOTES]: (prize: Prize, votes: CastVote[]) => {
     
     const totalVotes = 10
-    const maxVotesPerEntry = 5
+    const maxVotesPerEntry = 7
 
     if(!votes.length){
       return {ok: false, error: 'No votes were cast'}

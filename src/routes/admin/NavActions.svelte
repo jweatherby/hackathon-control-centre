@@ -3,34 +3,27 @@
   import EntryForm from './EntryForm.svelte';
   import ListVotes from './ReleaseVotes.svelte';
   import PrizeForm from './PrizeForm.svelte';
-  import type { AppControl, AppControlVotingEnabled, IVote } from '$lib/types';
+  import type { AnyAppControl, AppControlVotingEnabled, IVote } from '$lib/types';
   import { navigating, page } from '$app/stores';
   import { trpc } from '$lib/trpc/client';
   import { dictify } from '$lib/utils/dictify';
-    import EntriesLeaderboard from '../EntriesLeaderboard.svelte';
+  import EntriesLeaderboard from '../EntriesLeaderboard.svelte';
+    import AppSettings from './AppSettings.svelte';
+
+
   export let votes: IVote[];
-  $entities.appControls = dictify($page.data.appControls);
-  let appControls;
+  $entities.appControls = dictify($page.data.appControls, 'controlType');
   let votingEnabled = false;
-  let voteControl: AppControlVotingEnabled | null;
   $: {
-    appControls = $navigating
-      ? $page.data.appControls
-      : Object.values($entities.appControls);
-    voteControl = appControls.find(
-      (c: AppControl) => c.controlType === 'VOTING_ENABLED'
-    );
-    console.log('votingClosed', appControls, voteControl);
-    votingEnabled = !voteControl || voteControl.isActive;
+    votingEnabled = !!$entities.appControls?.VOTING_ENABLED?.isActive
   }
   const toggleVoting = () => {
     trpc()
       .appControls.toggleVoting.mutate({
-        id: voteControl?.id,
         votingToggled: !votingEnabled,
       })
       .then((ctrl) => {
-        $entities.appControls[ctrl.id] = ctrl as AppControlVotingEnabled;
+        $entities.appControls[ctrl.controlType] = ctrl as AppControlVotingEnabled;
       });
   };
 </script>
@@ -129,32 +122,67 @@
 </dialog>
 {/if}
 
+
+
+{#if $ui.popup.id === 'app-settings'}
+  <dialog open>
+    <article>
+      <header>
+        <!-- svelte-ignore a11y-missing-content -->
+        <a
+          href="#close"
+          class="close"
+          on:click={() => {
+            $ui.popup = { id: null };
+          }}
+        />
+        {'App Settings'}
+      </header>
+      <div>
+        <AppSettings />
+      </div>
+    </article>
+  </dialog>
+{/if}
+
 <div class="container">
   <div class="nav-actions">
-    <button role="button" on:click={toggleVoting}
-      >Voting - {votingEnabled ? 'on' : 'off'}</button
-    >
-    <!-- svelte-ignore a11y-no-redundant-roles -->
-    <button
-      role="button"
-      on:click={() => {
-        $ui.popup.id = 'edit-entry';
-      }}>Add an entry</button
-    >
-    <!-- svelte-ignore a11y-no-redundant-roles -->
-    <button
-      role="button"
-      on:click={() => {
-        $ui.popup.id = 'edit-prize';
-      }}>Add a prize</button
-    >
+    <div class='nav-actions-left'>
+      <button role="button" class='secondary' on:click={toggleVoting}
+        >Voting - {votingEnabled ? 'on' : 'off'}</button
+      >
+    </div>
+    <div class='nav-actions-right'>
+      <!-- svelte-ignore a11y-no-redundant-roles -->
+      <button
+        role="button"
+        on:click={() => {
+          $ui.popup.id = 'app-settings';
+        }}>Settings</button
+      >
+      <!-- svelte-ignore a11y-no-redundant-roles -->
+      <button
+        role="button"
+        on:click={() => {
+          $ui.popup.id = 'edit-entry';
+        }}>Add an entry</button
+      >
+      <!-- svelte-ignore a11y-no-redundant-roles -->
+      <button
+        role="button"
+        on:click={() => {
+          $ui.popup.id = 'edit-prize';
+        }}>Add a prize</button
+      >
+    </div>
   </div>
 </div>
 
 <style lang="scss">
   .nav-actions {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap; 
     button {
       width: auto;
       margin-left: 8px;

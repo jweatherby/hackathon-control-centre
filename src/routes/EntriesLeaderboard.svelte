@@ -1,14 +1,12 @@
 <script lang="ts">
-  import { page, navigating } from '$app/stores';
-  import { entities, ui } from '$lib/stores';
+  import { page } from '$app/stores';
+  import { entities } from '$lib/stores';
   import type { IEntry, IPrize } from '$lib/types';
   import { dictify } from '$lib/utils/dictify';
   import EntryVotes from './EntryVotes.svelte';
-  import PrizeInfo from './PrizeInfo.svelte';
 
   $entities.entries = dictify<IEntry>($page.data.entries);
   export let prize: IPrize;
-  export let onlyReleased: boolean = false
   let topVotes: number;
   let sortableEntries: (IEntry & { numVotes: number })[] = [];
   $: {

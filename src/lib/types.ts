@@ -42,12 +42,13 @@ export type CastVotesPayload = {
 
 export type ValidationState = {dirty: boolean, ok: boolean, message: string}
 
-export type AppControl = AppControlVotingEnabled | AppControlQuestion | AppControlEmbed
+export type AnyAppControl = AppControlVotingEnabled | AppControlQuestion | AppControlEmbed
+export type AppActivity = AppControlQuestion | AppControlEmbed 
+
 export type AppControlVotingEnabled = {
   id: string,
   isActive: boolean
   controlType: 'VOTING_ENABLED'
-  votingEnabled: boolean
 }
 
 export type AppControlQuestion = {
@@ -61,6 +62,7 @@ export type AppControlQuestion = {
 export type AppControlEmbed = {
   id: string,
   embedUrl: string
+  instructions: string
   isActive: boolean
   controlType: 'EMBED'
 }

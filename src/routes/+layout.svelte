@@ -10,7 +10,7 @@
     trpc()
       .appControls.listAllControls.query()
       .then((ctrls) => {
-        $entities.appControls = dictify(ctrls);
+        $entities.appControls = dictify(ctrls, 'controlType');
       });
   onMount(() => {
     pollAPI(fetchAppControls, 10000);

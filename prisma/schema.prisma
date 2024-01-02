@@ -17,16 +17,16 @@ model AdminUser {
   @@unique([userId])
 }
 
-enum AdminControlType {
+enum AppControlType {
   VOTING_ENABLED
   QUESTION
   EMBED
   IMAGE
 }
 
-model AdminControl {
+model AppControl {
   id          String           @id @default(cuid())
-  controlType AdminControlType
+  controlType AppControlType
   details     Json
   isActive    Boolean          @default(false)
 }

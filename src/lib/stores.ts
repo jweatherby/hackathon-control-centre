@@ -1,7 +1,7 @@
 import { writable, type Writable } from 'svelte/store';
 import type {
   IEntry, IEntryVotes, IPrize,
-  AppControl
+  AnyAppControl
 } from './types';
 
 
@@ -9,7 +9,7 @@ export interface EntityTypes {
   entries: Record<string, IEntry>;
   entryVotes: IEntryVotes;
   prizes: Record<string, IPrize>;
-  appControls: Record<string, AppControl>
+  appControls: Record<string, AnyAppControl>
 }
 
 interface UIType {

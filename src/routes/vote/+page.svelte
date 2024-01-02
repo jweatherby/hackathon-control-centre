@@ -42,11 +42,7 @@
       : Object.values($entities.prizes || {});
 
     prizes.sort((p1, p2) => p1.name.localeCompare(p2.name));
-
-    let voteCtrl = Object.values($entities.appControls).find(
-      (c) => c.controlType === 'VOTING_ENABLED'
-    );
-    votingEnabled = !!voteCtrl?.isActive;
+    votingEnabled = !!$entities.appControls.VOTING_ENABLED?.isActive;
     entries = Object.values($entities.entries)
     if((!!ownedEntryIds.length || notOnTeamChecked) && votingFormState === 'selecting-teams'){
       votingFormState = 'can-vote'
@@ -79,7 +75,7 @@
       responses.forEach((resp) => {
         if(resp){
           const {prizeId, errors} = resp
-          if(!!errors.length){
+          if(!!errors.length && prizeId){
             hasError = true
             validations[prizeId] = {
               dirty: true, 
