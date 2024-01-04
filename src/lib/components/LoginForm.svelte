@@ -39,7 +39,7 @@
     />
   </label>
   {#if !!error}
-   <div class='notice error'>{error}</div>
+  <div class='notice error'>{error}</div>
    {/if}
   <div>
     <button type="submit">Login</button>

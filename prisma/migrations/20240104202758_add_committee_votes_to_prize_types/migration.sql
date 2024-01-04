@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "VotingType" ADD VALUE 'COMMITTEE_VOTES';

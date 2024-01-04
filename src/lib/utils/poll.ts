@@ -1,8 +1,13 @@
+import settings from "$lib/settings"
 const sleep = (duration: number) => new Promise(resolve => setTimeout(resolve, duration))
-export const pollAPI = (promiseFn: () => Promise<any>, duration: number): Promise<any> =>
-  promiseFn().then(
-    sleep(duration).then(() => pollAPI(promiseFn, duration))
-  )
+export const pollAPI = (promiseFn: () => Promise<any>, duration: number): Promise<any> => {
+  if (settings.pollingEnabled) {
+    return promiseFn().then(
+      sleep(duration).then(() => pollAPI(promiseFn, duration))
+    )
+  }
+  return promiseFn()
+}
 
 // export async function pollAPI(
 //   apiCall: () => Promise<any>,

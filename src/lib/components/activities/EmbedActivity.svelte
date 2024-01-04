@@ -6,10 +6,10 @@
 <div class='container'>
   <div class='card'>
     <h2>Let's take a moment</h2>
+    <p>{activity.instructions}</p>
     <div class='iframe-wrapper'>
       {@html activity.embedUrl}
     </div>
-    <p>{activity.instructions}</p>
   </div>
 </div>
 <style lang='scss'>

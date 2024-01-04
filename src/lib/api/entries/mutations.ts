@@ -2,9 +2,9 @@ import { z } from 'zod';
 import { privateRoute, adminRoute } from '$lib/trpc/init';
 import { prisma } from '$lib/dbClient';
 import { serializeEntry, serializePrize } from './serializers';
-import { validatePrize } from './utils/validators';
-import type { CastVote } from '$lib/types';
+import { validatePrize } from './utils/validateVotes';
 import { AppControlType } from '@prisma/client';
+import { serializePrizeInput, validatePrizePayload } from './utils/validateInput';
 
 export default {
   /**
@@ -38,7 +38,7 @@ export default {
       }),
     )
     .mutation(async ({ input: { entryIds }, ctx: { user } }) => {
-      if(entryIds.length){
+      if (entryIds.length) {
         await prisma.userEntries.createMany({
           data: entryIds.map((entryId) => ({ entryId, userId: user.id })),
         });
@@ -62,7 +62,7 @@ export default {
           controlType: AppControlType.VOTING_ENABLED,
         },
       });
-      if(!votingEnabled?.isActive){
+      if (!votingEnabled?.isActive) {
         return {
           errors: [{ message: 'Voting is disabled', code: 'BAD_REQUEST' }],
         };
@@ -71,7 +71,7 @@ export default {
         where: { id: prizeId },
       });
       const { ok, error } = validatePrize(prize, votes);
-      if(!ok){
+      if (!ok) {
         return { prizeId, errors: [{ message: error, code: 'BAD_REQUEST' }] };
       }
       await prisma.vote.deleteMany({ where: { userId: user.id } });
@@ -92,24 +92,35 @@ export default {
         name: z.string(),
         description: z.string(),
         autoRelease: z.boolean(),
+        numDisplayedEntries: z.number(),
         color: z.string(),
         imageUrl: z.string(),
-        votingType: z.enum(['SINGLE_VOTE', 'DISTRIBUTE_VOTES']),
+        votingType: z.enum(['SINGLE_VOTE', 'DISTRIBUTE_VOTES', 'COMMITTEE_VOTES']),
+        allowedEmails: z.string().array().optional(),
+        totalVotes: z.number().optional(),
+        maxVotesPerEntry: z.number().optional(),
       }),
     )
     .mutation(async ({ input: { id, ...prizePayload } }) => {
       let prize;
+      const { ok, errors } = validatePrizePayload(prizePayload)
+      if (!ok) {
+        return { errors, prize: null }
+      }
+
+      const payload = serializePrizeInput(prizePayload)
+
       if (id) {
         prize = await prisma.prize.update({
           where: { id },
-          data: prizePayload,
+          data: payload,
         });
       } else {
         prize = await prisma.prize.create({
-          data: prizePayload,
+          data: payload,
         });
       }
-      return serializePrize(prize);
+      return { prize: serializePrize(prize), errors: [] };
     }),
 
   releaseVotes: adminRoute

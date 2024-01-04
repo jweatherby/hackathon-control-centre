@@ -1,4 +1,4 @@
-import type { IEntry, IVote, IPrize } from '$lib/types';
+import type { IEntry, IVote, IPrize, AnyPrize } from '$lib/types';
 import type { Entry, Prize, Vote } from '@prisma/client';
 
 export const serializeEntry = (entry: Entry): IEntry => {
@@ -11,7 +11,9 @@ export const serializeEntry = (entry: Entry): IEntry => {
   };
 };
 
-export const serializePrize = (prize: Prize): IPrize => {
+export const serializePrize = (prize: Prize): AnyPrize => {
+  console.log('serializePrize', prize)
+  const details = JSON.parse(prize.details as string || '{}')
   return {
     id: prize.id,
     name: prize.name,
@@ -20,6 +22,8 @@ export const serializePrize = (prize: Prize): IPrize => {
     color: prize.color,
     imageUrl: prize.imageUrl,
     votingType: prize.votingType,
+    numDisplayedEntries: prize.numDisplayedEntries,
+    ...details
   };
 };
 
@@ -30,6 +34,7 @@ export const serializeVote = (vote: Vote): IVote => {
     numVotes: vote.numVotes,
     prizeId: vote.prizeId,
     isReleased: vote.isReleased,
-    dateCreated: vote.dateCreated,
+    dateCreated: vote.dateCreated?.toISOString() as string,
+    userId: vote.userId
   };
 };

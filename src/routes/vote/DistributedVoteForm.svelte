@@ -1,13 +1,18 @@
 <script lang="ts">
   import { navigating, page } from '$app/stores';
   import { entities } from '$lib/stores';
-  import type { CastVote, IEntry, IPrize, ValidationState } from '$lib/types';
+  import type {
+    CastVote,
+    DistributedVotesPrize,
+    IEntry,
+    ValidationState,
+  } from '$lib/types';
 
   export let payload: CastVote[];
-  export let prize: IPrize;
-  export let ownedEntryIds = [] as string[] 
+  export let prize: DistributedVotesPrize;
+  export let ownedEntryIds = [] as string[];
   let entries: IEntry[] = [];
-  export let validation = {} as ValidationState
+  export let validation = {} as ValidationState;
 
   $: {
     entries = $navigating
@@ -16,7 +21,9 @@
     entries.sort((e1, e2) => e1.title.localeCompare(e2.title));
   }
 
-  const votesTotal = 10;
+  console.log('this prize', prize)
+
+  const votesTotal = prize.totalVotes;
 
   type IVote = Record<string, number>;
   let votedEntries: IVote = {};
@@ -26,7 +33,7 @@
       votesTotal -
       Object.values(votedEntries).reduce(
         (total, numVotes) => numVotes + total,
-        0
+        0,
       );
     payload = Object.entries(votedEntries)
       .map(([entryId, numVotes]) => ({
@@ -36,9 +43,11 @@
       .filter(({ numVotes }) => numVotes > 0);
   }
   const addVote = (entryId: string) => () => {
-    votedEntries = Object.assign(votedEntries, {
-      [entryId]: (votedEntries[entryId] || 0) + 1,
-    });
+    if ((votedEntries[entryId] || 0) < prize.maxVotesPerEntry) {
+      votedEntries = Object.assign(votedEntries, {
+        [entryId]: (votedEntries[entryId] || 0) + 1,
+      });
+    }
   };
   const rmVote = (entryId: string) => () => {
     votedEntries = Object.assign(votedEntries, {
@@ -50,7 +59,7 @@
 <div class="vote-form">
   <div class="container">
     <div class="card">
-      <div class='card sub-card'>
+      <div class="card sub-card">
         <div class="prize">
           <figure>
             <img src={prize.imageUrl} />
@@ -82,7 +91,7 @@
           </div>
         </div>
         {#if validation && !validation.ok && validation.dirty}
-         <aside>{validation.message}</aside>
+          <aside>{validation.message}</aside>
         {/if}
       </div>
       <hr />
@@ -128,7 +137,6 @@
 
 <style lang="scss">
   .sub-card {
-
     border-radius: 1rem;
     padding: 16px;
   }
@@ -227,7 +235,7 @@
       }
     }
   }
-    aside {
-      color: tomato;
-    }
+  aside {
+    color: tomato;
+  }
 </style>

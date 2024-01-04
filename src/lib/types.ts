@@ -1,4 +1,4 @@
-export type VotingTypeEnum = 'SINGLE_VOTE' | 'DISTRIBUTE_VOTES';
+export type VotingTypeEnum = 'SINGLE_VOTE' | 'DISTRIBUTE_VOTES' | 'COMMITTEE_VOTES';
 export interface IEntry {
   id: string;
   title: string;
@@ -25,10 +25,24 @@ export interface IPrize {
   name: string;
   description: string;
   autoRelease: boolean;
+  numDisplayedEntries: number;
   color: string;
   imageUrl: string;
   votingType: VotingTypeEnum;
 }
+
+export type SingleVotePrize = IPrize
+
+export interface DistributedVotesPrize extends IPrize {
+  totalVotes: number
+  maxVotesPerEntry: number
+}
+
+export interface CommitteeVotePrize extends IPrize {
+  allowedEmails: string[]
+}
+
+export type AnyPrize = SingleVotePrize & DistributedVotesPrize & CommitteeVotePrize
 
 export interface IUser {
   id: string;
@@ -40,10 +54,10 @@ export type CastVotesPayload = {
   votes: CastVote[];
 };
 
-export type ValidationState = {dirty: boolean, ok: boolean, message: string}
+export type ValidationState = { dirty: boolean, ok: boolean, message: string }
 
 export type AnyAppControl = AppControlVotingEnabled | AppControlQuestion | AppControlEmbed
-export type AppActivity = AppControlQuestion | AppControlEmbed 
+export type AppActivity = AppControlQuestion | AppControlEmbed
 
 export type AppControlVotingEnabled = {
   id: string,
@@ -70,5 +84,6 @@ export type AppControlEmbed = {
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ISettings {
   rootDomain: string;
+  pollingEnabled: boolean,
 }
 

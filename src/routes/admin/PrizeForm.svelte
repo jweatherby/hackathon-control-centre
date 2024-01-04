@@ -1,41 +1,43 @@
 <script lang="ts">
   import { entities } from '$lib/stores';
   import { trpc } from '$lib/trpc/client';
-  import type { IPrize, VotingTypeEnum } from '$lib/types';
-  import { init } from 'svelte/internal';
+  import type { AnyPrize, DistributedVotesPrize, IPrize } from '$lib/types';
 
-  type FormVals = {
-    id?: string;
-    name: string;
-    description: string;
-    autoRelease: boolean;
-    color: string;
-    imageUrl: string;
-    votingType: VotingTypeEnum;
-  };
-  export let initialValues: FormVals = {} as FormVals;
+  export let initialValues = {} as AnyPrize & { id?: string };
+  let formVals = {
+    name: initialValues?.name,
+    description: initialValues?.description,
+    color: initialValues?.color || '#ffd700',
+    imageUrl: initialValues?.imageUrl,
+    votingType: initialValues?.votingType || 'SINGLE_VOTE',
+    autoRelease: initialValues?.autoRelease || true,
+    numDisplayedEntries: initialValues?.numDisplayedEntries || 7,
+    allowedEmails: initialValues?.allowedEmails || [],
+    maxVotesPerEntry: initialValues?.maxVotesPerEntry || 5,
+    totalVotes: initialValues?.totalVotes || 10,
+  } as typeof initialValues;
+
   export let onSuccess: (prize: IPrize) => void;
 
   const savePrize = async (event: SubmitEvent) => {
-    const formData = new FormData(event.target as HTMLFormElement);
-    const payload: FormVals = {
-      name: formData.get('name') as string,
-      description: formData.get('description') as string,
-      autoRelease: (formData.get('autoRelease') as string) === 'true',
-      color: formData.get('color') as string,
-      imageUrl: formData.get('imageUrl') as string,
-      votingType: formData.get('votingType') as VotingTypeEnum,
-    };
     if (initialValues.id) {
-      payload.id = initialValues.id;
+      formVals.id = initialValues.id;
     }
-    console.log('sending this payload', payload);
+    formVals = {...formVals,
+      maxVotesPerEntry: parseInt(formVals.maxVotesPerEntry),
+      totalVotes: parseInt(formVals.totalVotes),
+      numDisplayedEntries: parseInt(formVals.numDisplayedEntries)
+    }
     trpc()
-      .entries.savePrize.mutate(payload as FormVals)
-      .then((prize) => {
-        $entities.prizes[prize.id] = prize;
-        if (onSuccess) {
-          return onSuccess(prize);
+      .entries.savePrize.mutate(formVals)
+      .then(({ errors, prize }) => {
+        if (errors?.length) {
+          return;
+        } else if (prize) {
+          $entities.prizes[prize.id] = prize;
+          if (onSuccess) {
+            return onSuccess(prize);
+          }
         }
       });
     return;
@@ -49,7 +51,7 @@
       type="text"
       id="name"
       name="name"
-      value={initialValues?.name || ''}
+      bind:value={formVals.name}
       placeholder="Your prize's name"
     />
   </label>
@@ -59,7 +61,7 @@
       placeholder="Let the people know the criteria for this prize"
       name="description"
       id="description"
-      value={initialValues?.description || ''}
+      bind:value={formVals.description}
     />
   </label>
   <label>
@@ -68,23 +70,33 @@
       placeholder="https://"
       name="imageUrl"
       id="imageUrl"
-      value={initialValues?.imageUrl || ''}
+      bind:value={formVals.imageUrl}
     />
   </label>
   <label for="autoRelease">
     Auto-release votes
     <input
       type="checkbox"
-      value={initialValues?.autoRelease || true}
+      bind:checked={formVals.autoRelease}
       name="autoRelease"
       id="autoRelease"
+    />
+  </label>
+  <label for="numDisplayedEntries">
+    Number of displayed entries
+    <input
+      type="number"
+      min="1"
+      bind:value={formVals.numDisplayedEntries}
+      name="numDisplayedEntries"
+      id="numDisplayedEntries"
     />
   </label>
   <label for="color">
     Leaderbar color
     <input
       type="color"
-      value={initialValues?.color || '#ffd700'}
+      bind:value={formVals.color}
       name="color"
       id="color"
     />
@@ -92,13 +104,33 @@
   <label for="voting-type">
     Voting format
     <select
-      value={initialValues?.votingType || ''}
+      bind:value={formVals.votingType}
       name="votingType"
       id="voting-type"
     >
       <option value="SINGLE_VOTE">Single Vote</option>
       <option value="DISTRIBUTE_VOTES">Distribute Votes</option>
     </select>
+  </label>
+  <label for="totalVotes">
+    Number of total votes
+    <input
+      type="number"
+      min="1"
+      bind:value={formVals.totalVotes}
+      name="totalVotes"
+      id="totalVotes"
+    />
+  </label>
+  <label for="maxVotesPerEntry">
+    Max votes per entry
+    <input
+      type="number"
+      min="1"
+      bind:value={formVals.maxVotesPerEntry}
+      name="maxVotesPerEntry"
+      id="maxVotesPerEntry"
+    />
   </label>
   <div class="nav-actions">
     <button type="submit">Save Prize</button>

@@ -13,7 +13,7 @@ const calcSumOfVotes = (votes: CastVote[]) =>
 
 const validators: Record<string, PrizeValidator> = {
   [VotingType.DISTRIBUTE_VOTES]: (prize: Prize, votes: CastVote[]) => {
-    
+
     const totalVotes = 10
     const maxVotesPerEntry = 7
 
@@ -35,7 +35,7 @@ const validators: Record<string, PrizeValidator> = {
     return { ok: true };
   },
   [VotingType.SINGLE_VOTE]: (prize: Prize, votes: CastVote[]) => {
-    
+
     if(!votes.length){
       return {ok: false, error: 'No vote was cast'}
     }

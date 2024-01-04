@@ -5,10 +5,11 @@
   import { dictify } from '$lib/utils/dictify';
   import EntryVotes from './EntryVotes.svelte';
 
-  $entities.entries = dictify<IEntry>($page.data.entries);
-  export let prize: IPrize;
+  $entities.entries = dictify<IEntry & {id: string}>($page.data.entries);
+  export let prize: IPrize & {id: string};
   let topVotes: number;
   let sortableEntries: (IEntry & { numVotes: number })[] = [];
+  console.log('this prize', prize)
   $: {
     if ($entities.entryVotes[prize.id]) {
       topVotes = Math.max(...Object.values($entities.entryVotes[prize.id]), 0);
@@ -43,7 +44,7 @@
       </div>
       <hr />
       <ul class="entries-list">
-        {#each sortableEntries.slice(0, 7) as entry}
+        {#each sortableEntries.slice(0, prize.numDisplayedEntries) as entry}
           <li class="entry-item">
             <div class="entry-info">
               <div class="entry-title">{entry.title}</div>

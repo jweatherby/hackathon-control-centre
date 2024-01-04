@@ -25,10 +25,10 @@ enum AppControlType {
 }
 
 model AppControl {
-  id          String           @id @default(cuid())
+  id          String         @id @default(cuid())
   controlType AppControlType
   details     Json
-  isActive    Boolean          @default(false)
+  isActive    Boolean        @default(false)
 }
 
 model User {
@@ -60,19 +60,22 @@ model Entry {
 }
 
 enum VotingType {
+  COMMITTEE_VOTES
   DISTRIBUTE_VOTES
   SINGLE_VOTE
 }
 
 model Prize {
-  id          String     @id @default(cuid())
-  name        String
-  description String     @default("")
-  autoRelease Boolean    @default(true)
-  color       String     @default("#ffd800")
-  imageUrl    String     @default("")
-  votingType  VotingType
-  Vote        Vote[]
+  id                  String     @id @default(cuid())
+  name                String
+  description         String     @default("")
+  autoRelease         Boolean    @default(true)
+  numDisplayedEntries Int        @default(7)
+  color               String     @default("#ffd800")
+  imageUrl            String     @default("")
+  details             Json?
+  votingType          VotingType
+  Vote                Vote[]
 }
 
 model Vote {
